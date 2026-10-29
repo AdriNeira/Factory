@@ -1,4 +1,4 @@
-const CACHE = 'fabrica-v2';
+const CACHE = 'fabrica-v3';
 const FILES = ['./', 'index.html', 'app.js', 'app.css', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
 
 self.addEventListener('install', event => {
@@ -16,7 +16,7 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     if (event.request.method !== 'GET') return;
     event.respondWith(
-        fetch(event.request)
+        fetch(event.request.url, { cache: 'no-cache' })
             .then(response => {
                 const copy = response.clone();
                 if (response.ok) caches.open(CACHE).then(cache => cache.put(event.request, copy));
