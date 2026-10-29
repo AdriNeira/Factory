@@ -79,7 +79,7 @@ export const GOALS: { item: Item; amount: number; text: string; reward: number }
     { item: 'lingoteCobre', amount: 20, text: 'Entrega 20 lingotes de cobre', reward: 25 },
     { item: 'cable', amount: 20, text: 'Entrega 20 cables', reward: 25 },
     { item: 'placa', amount: 40, text: 'Entrega 40 placas en total', reward: 25 },
-    { item: 'hormigon', amount: 25, text: 'Investiga Hormigón y entrega 25 de hormigón', reward: 40 },
+    { item: 'hormigon', amount: 25, text: 'Investiga Hormigón, convierte piedra en hormigón en una Constructora y entrega 25 al almacén', reward: 40 },
     { item: 'circuito', amount: 25, text: 'Investiga Ensamblaje y entrega 25 circuitos', reward: 40 },
     { item: 'motor', amount: 10, text: 'Investiga Motores y entrega 10 motores', reward: 60 },
     { item: 'circuito', amount: 150, text: 'Entrega 150 circuitos en total', reward: 60 },
