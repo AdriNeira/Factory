@@ -9,7 +9,7 @@ export const index = (x: number, y: number) => y * WIDTH + x;
 export const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
 
 function newBuilding(kind: Kind, dir: Dir): Building {
-    return { kind, dir, item: null, input: {}, job: null, progress: 0, out: null, outCount: 0, moved: false };
+    return { kind, dir, item: null, input: {}, job: null, progress: 0, out: null, outCount: 0, moved: false, setting: null };
 }
 
 function patch(deposits: (Item | null)[], centers: [number, number][], item: Item) {
@@ -215,6 +215,15 @@ function runCrafter(world: World, x: number, y: number, b: Building) {
     emit(world, x, y, b);
 }
 
+function runDispatcher(world: World, x: number, y: number, b: Building) {
+    const item = b.setting;
+    if (!item || world.stock[item] <= 0) return;
+    const tx = x + DX[b.dir];
+    const ty = y + DY[b.dir];
+    if (!inside(tx, ty) || world.cells[index(tx, ty)]?.kind === 'almacen') return;
+    if (push(world, x, y, b, item)) world.stock[item]--;
+}
+
 function runBelt(world: World, x: number, y: number, b: Building) {
     if (b.item && !b.moved && push(world, x, y, b, b.item)) b.item = null;
 }
@@ -237,6 +246,7 @@ export function step(world: World) {
             else if (b.kind === 'fundidora') runSmelter(world, x, y, b);
             else if (b.kind === 'constructor' || b.kind === 'ensambladora') runCrafter(world, x, y, b);
             else if (b.kind === 'cinta') runBelt(world, x, y, b);
+            else if (b.kind === 'despacho') runDispatcher(world, x, y, b);
         }
     }
     updateGoal(world);

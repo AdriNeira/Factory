@@ -2,9 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { COST, DX, DY, GOALS, HEIGHT, ITEM_NAME, KINDS, KIND_NAME, KIND_NEEDS, STEP_MS, TILE, WIDTH, costText } from './config';
 import { draw } from './draw';
 import { Panel } from './Panel';
+import { Inspector } from './Inspector';
 import { Research } from './Research';
+import { Stock } from './Stock';
 import { deserialize, serialize } from './save';
-import type { Dir, Kind, Tool, World } from './types';
+import type { Dir, Item, Kind, Tool, World } from './types';
 import { createWorld, has, index, inside, place, remove, research, step } from './world';
 
 const ARROWS = ['↑', '→', '↓', '←'];
@@ -35,6 +37,10 @@ export function Game({ useStore }: { useStore: Store }) {
     const [toast, setToast] = useState('');
     const [panel, setPanel] = useState(false);
     const [labPanel, setLabPanel] = useState(false);
+    const [stockPanel, setStockPanel] = useState(false);
+    const [sel, setSel] = useState(-1);
+    const selRef = useRef(-1);
+    selRef.current = sel;
 
     toolRef.current = tool;
     dirRef.current = dir;
@@ -98,7 +104,7 @@ export function Game({ useStore }: { useStore: Store }) {
                 if (ctx) {
                     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
                     const now = performance.now();
-                    draw(ctx, world.current, cam.current.x, cam.current.y, w, h, now, Math.min(1, (now - stepAt.current) / STEP_MS));
+                    draw(ctx, world.current, cam.current.x, cam.current.y, w, h, now, Math.min(1, (now - stepAt.current) / STEP_MS), selRef.current);
                 }
             }
             frame = requestAnimationFrame(render);
@@ -119,9 +125,16 @@ export function Game({ useStore }: { useStore: Store }) {
 
     const apply = (x: number, y: number) => {
         const t = toolRef.current;
-        if (t === 'mover') return;
+        if (t === 'mover') {
+            setSel(inside(x, y) && world.current.cells[index(x, y)] ? index(x, y) : -1);
+            return;
+        }
         if (t === 'borrar') remove(world.current, x, y);
-        else notify(place(world.current, x, y, t, dirRef.current));
+        else {
+            notify(place(world.current, x, y, t, dirRef.current));
+            const built = inside(x, y) ? world.current.cells[index(x, y)] : null;
+            if (t === 'despacho' && built && !built.setting) setSel(index(x, y));
+        }
     };
 
     const paintBelt = (x: number, y: number) => {
@@ -199,6 +212,7 @@ export function Game({ useStore }: { useStore: Store }) {
     const w = world.current;
     const goal = GOALS[w.goal];
     const buttons: Tool[] = ['mover', ...KINDS.filter(k => KIND_NEEDS[k] === null || has(w, KIND_NEEDS[k]!)), 'borrar'];
+    const selected = sel >= 0 ? world.current.cells[sel] : null;
     const costLabel = (k: Kind) => `${COST[k].lingoteHierro ?? 0}${Object.keys(COST[k]).length > 1 ? '+' : ''}`;
     const choose = (t: Tool) => {
         setTool(t);
@@ -216,12 +230,21 @@ export function Game({ useStore }: { useStore: Store }) {
             />
             {toast && <div className="toast">{toast}</div>}
         </div>
+        {selected && <Inspector
+            world={w}
+            building={selected}
+            ore={w.deposits[sel]}
+            onPick={item => { selected.setting = item; setTick(t => t + 1); }}
+            onTurn={() => { selected.dir = ((selected.dir + 1) % 4) as Dir; setTick(t => t + 1); }}
+            onRemove={() => { remove(world.current, sel % WIDTH, Math.floor(sel / WIDTH)); setSel(-1); }}
+            onClose={() => setSel(-1)}
+        />}
         <div className="hud">
             <div className="goal">
                 {goal ? `${goal.text}: ${Math.min(w.delivered[goal.item], goal.amount)}/${goal.amount}` : 'Todos los objetivos cumplidos. Sigue ampliando.'}
             </div>
             <div className="stock">
-                <span>Hierro: {w.stock.lingoteHierro}</span>
+                <button className="wide" onClick={() => setStockPanel(true)}>Almacén · hierro {w.stock.lingoteHierro}</button>
                 <div className="row">
                     <button onClick={() => setLabPanel(true)}>Investigar</button>
                     <button onClick={() => setPanel(true)}>Partidas</button>
@@ -240,6 +263,7 @@ export function Game({ useStore }: { useStore: Store }) {
             onResearch={id => notify(research(world.current, id))}
             onClose={() => setLabPanel(false)}
         />}
+        {stockPanel && <Stock world={w} onClose={() => setStockPanel(false)} />}
         {panel && <Panel
             stock={Object.keys(w.stock).filter(k => k !== 'lingoteHierro' && w.stock[k as keyof typeof w.stock] > 0).map(k => `${w.stock[k as keyof typeof w.stock]} ${ITEM_NAME[k as keyof typeof w.stock]}`).join(', ') || 'nada más'}
             slots={slots}
@@ -252,16 +276,19 @@ export function Game({ useStore }: { useStore: Store }) {
                 const restored = deserialize(slots[n]);
                 if (restored) {
                     world.current = restored;
+                    setSel(-1);
                     setActive(n);
                     setPanel(false);
                 }
             }}
             onNew={() => {
                 world.current = createWorld();
+                setSel(-1);
                 setPanel(false);
             }}
             onImport={restored => {
                 world.current = restored;
+                setSel(-1);
                 setPanel(false);
             }}
             onClose={() => setPanel(false)}

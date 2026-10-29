@@ -35,6 +35,7 @@ export function Research({ world, onResearch, onClose }: Props) {
                 <strong>{KIND_NAME[k]}:</strong> {recipes(world, k).map(recipeText).join('; ')}
             </p>)}
             <p className="hint"><strong>Hormigón:</strong> la piedra minada no cuenta. Llévala por cinta a una Constructora y la salida, por cinta, al almacén.</p>
+            <p className="hint"><strong>Despacho:</strong> saca del almacén el material que elijas. Ponlo pegado a una máquina o al inicio de una cinta, apuntando hacia ella, y toca el Despacho para elegir. Usa un Despacho por material.</p>
             <p className="hint"><strong>Fundidora:</strong> mena de hierro o de cobre da lingotes.</p>
             <button className="close" onClick={onClose}>Cerrar</button>
         </div>

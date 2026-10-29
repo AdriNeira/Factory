@@ -8,7 +8,7 @@ export const MAX_BUILDINGS = 700;
 export const DX = [0, 1, 0, -1];
 export const DY = [-1, 0, 1, 0];
 
-export const KINDS: Kind[] = ['cinta', 'minero', 'fundidora', 'constructor', 'almacen', 'ensambladora'];
+export const KINDS: Kind[] = ['cinta', 'minero', 'fundidora', 'constructor', 'almacen', 'ensambladora', 'despacho'];
 
 export const COST: Record<Kind, Partial<Counts>> = {
     cinta: { lingoteHierro: 1 },
@@ -17,6 +17,7 @@ export const COST: Record<Kind, Partial<Counts>> = {
     constructor: { lingoteHierro: 15 },
     almacen: { lingoteHierro: 5 },
     ensambladora: { lingoteHierro: 20, placa: 10, cable: 10 },
+    despacho: { lingoteHierro: 5 },
 };
 
 export const KIND_NAME: Record<Kind, string> = {
@@ -26,6 +27,7 @@ export const KIND_NAME: Record<Kind, string> = {
     constructor: 'Constructora',
     almacen: 'Almacén',
     ensambladora: 'Montadora',
+    despacho: 'Despacho',
 };
 
 export const ITEM_NAME: Record<Item, string> = {
@@ -63,7 +65,10 @@ export const KIND_COLOR: Record<Kind, string> = {
     constructor: '#3f6ea4',
     almacen: '#7a5aa6',
     ensambladora: '#2f8f7a',
+    despacho: '#c2802f',
 };
+
+export const ITEMS = Object.keys(ITEM_NAME) as Item[];
 
 export const SMELT: Partial<Record<Item, Item>> = { menaHierro: 'lingoteHierro', menaCobre: 'lingoteCobre' };
 
@@ -111,7 +116,7 @@ export const RESEARCH: ResearchDef[] = [
 ];
 
 export const KIND_NEEDS: Record<Kind, ResearchId | null> = {
-    cinta: null, minero: null, fundidora: null, constructor: null, almacen: null, ensambladora: 'ensamblaje',
+    cinta: null, minero: null, fundidora: null, constructor: null, almacen: null, ensambladora: 'ensamblaje', despacho: null,
 };
 
 export const costText = (cost: Partial<Counts>) =>
