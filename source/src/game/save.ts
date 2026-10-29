@@ -45,7 +45,7 @@ export function deserialize(text: string): World | null {
             if (world.cells[i]) continue;
             world.cells[i] = {
                 kind: KINDS[k], dir: d as Dir, item: null, input: {}, job: null,
-                progress: 0, out: null, outCount: 0, moved: false,
+                progress: 0, out: null, outCount: 0, moved: false, recycled: false,
                 setting: it >= 0 && ITEMS[it] ? ITEMS[it] : null,
             };
             world.count++;

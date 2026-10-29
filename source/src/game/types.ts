@@ -16,6 +16,7 @@ export interface Building {
     outCount: number;
     moved: boolean;
     setting: Item | null;
+    recycled: boolean;
 }
 
 export interface World {

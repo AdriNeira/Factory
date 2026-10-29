@@ -9,7 +9,7 @@ export const index = (x: number, y: number) => y * WIDTH + x;
 export const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
 
 function newBuilding(kind: Kind, dir: Dir): Building {
-    return { kind, dir, item: null, input: {}, job: null, progress: 0, out: null, outCount: 0, moved: false, setting: null };
+    return { kind, dir, item: null, input: {}, job: null, progress: 0, out: null, outCount: 0, moved: false, setting: null, recycled: false };
 }
 
 function patch(deposits: (Item | null)[], centers: [number, number][], item: Item) {
@@ -128,28 +128,29 @@ function accepts(world: World, target: Building | null, item: Item, from: Dir): 
     }
 }
 
-function deliver(world: World, target: Building, item: Item) {
+function deliver(world: World, target: Building, item: Item, recycled: boolean) {
     switch (target.kind) {
         case 'cinta':
             target.item = item;
+            target.recycled = recycled;
             target.moved = true;
             break;
         case 'almacen':
             world.stock[item]++;
-            world.delivered[item]++;
+            if (!recycled) world.delivered[item]++;
             break;
         default:
             target.input[item] = (target.input[item] ?? 0) + 1;
     }
 }
 
-function push(world: World, x: number, y: number, source: Building, item: Item): boolean {
+function push(world: World, x: number, y: number, source: Building, item: Item, recycled = false): boolean {
     const tx = x + DX[source.dir];
     const ty = y + DY[source.dir];
     if (!inside(tx, ty)) return false;
     const target = world.cells[index(tx, ty)];
     if (!accepts(world, target, item, source.dir)) return false;
-    deliver(world, target as Building, item);
+    deliver(world, target as Building, item, recycled);
     return true;
 }
 
@@ -220,12 +221,12 @@ function runDispatcher(world: World, x: number, y: number, b: Building) {
     if (!item || world.stock[item] <= 0) return;
     const tx = x + DX[b.dir];
     const ty = y + DY[b.dir];
-    if (!inside(tx, ty) || world.cells[index(tx, ty)]?.kind === 'almacen') return;
-    if (push(world, x, y, b, item)) world.stock[item]--;
+    if (!inside(tx, ty)) return;
+    if (push(world, x, y, b, item, true)) world.stock[item]--;
 }
 
 function runBelt(world: World, x: number, y: number, b: Building) {
-    if (b.item && !b.moved && push(world, x, y, b, b.item)) b.item = null;
+    if (b.item && !b.moved && push(world, x, y, b, b.item, b.recycled)) b.item = null;
 }
 
 function updateGoal(world: World) {
